@@ -19,7 +19,10 @@ def start_scrape():
             # Eliminar el archivo de resultados existente si existe
             if os.path.exists('results.csv'):
                 os.remove('results.csv')
-            
+            # Eliminar el archivo de estado si existe
+            if os.path.exists('scraping_status.txt'):
+                os.remove('scraping_status.txt')
+                
             command = [
                 'scrapy', 'crawl', 'my_spider',
                 '-a', f'start_urls={url}',
@@ -53,11 +56,12 @@ def stop_scrape():
             process.send_signal(signal.SIGINT)  # Enviar señal para terminar el proceso de Scrapy
             process.wait()  # Esperar a que el proceso termine
             process = None
-        finally:
             # Actualizar el archivo de estado
             with open('scraping_status.txt', 'w') as f:
                 f.write('finished')
-        return jsonify({"message": "Scraping detenido. Puede descargar el archivo.", "status": "finished"})
+            return jsonify({"message": "Scraping detenido. Puede descargar el archivo.", "status": "finished"})
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
     return jsonify({"error": "No hay un proceso de scraping en ejecución"}), 404
 
 @app.route("/download")
