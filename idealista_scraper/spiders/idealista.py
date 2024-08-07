@@ -6,9 +6,20 @@ from scrapy.exporters import CsvItemExporter
 from dotenv import load_dotenv
 import os
 
+from dotenv import load_dotenv, find_dotenv
+import os
+
 # Cargar las variables de entorno desde el archivo .env
-load_dotenv()
-proxy_url = os.getenv('PROXY_URL')
+dotenv_path = find_dotenv('Proxy.env')
+print(f"dotenv_path: {dotenv_path}")  # Verificar la ruta del archivo .env
+
+if dotenv_path:
+    load_dotenv(dotenv_path=dotenv_path)
+else:
+    print("Archivo .env no encontrado")
+
+proxy_url = os.getenv('PROXY')
+print(f"Proxy URL: {proxy_url}")  # Verificar el contenido de la variable PROXY
 
 class MySpider(scrapy.Spider):
     name = 'my_spider'
@@ -72,6 +83,7 @@ class MySpider(scrapy.Spider):
                     headers=self.headers,
                     callback=self.parse,
                     errback=self.start_requests_failure,
+                    meta={'proxy': proxy_url},
                     dont_filter=True
                 )
 
