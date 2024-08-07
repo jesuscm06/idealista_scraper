@@ -9,11 +9,13 @@ process = None  # Variable global para manejar el proceso de scraping
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    return render_template("index.html")
+    status = get_status()
+    return render_template("index.html", status=status)
 
 @app.route("/start", methods=["POST"])
 def start_scrape():
-    url = request.json.get("url")
+    data = request.get_json()
+    url = data.get("url")
     if url:
         global process
         try:
@@ -24,7 +26,8 @@ def start_scrape():
             command = [
                 'scrapy', 'crawl', 'my_spider',
                 '-a', f'start_urls={url}',
-                '-o', 'results.csv:csv'
+                '-o', 'results.csv',
+                '-t', 'csv'
             ]
             # Crear el archivo de estado
             with open('scraping_status.txt', 'w') as f:
@@ -39,14 +42,8 @@ def start_scrape():
 
 @app.route("/status", methods=["GET"])
 def status():
-    global process
-    if process and process.poll() is None:
-        return jsonify({"status": "scraping"})
-    elif os.path.exists('scraping_status.txt'):
-        with open('scraping_status.txt', 'r') as f:
-            status = f.read()
-        return jsonify({"status": status})
-    return jsonify({"status": "no_scraping"})
+    status = get_status()
+    return jsonify({"status": status})
 
 @app.route("/stop", methods=["GET"])
 def stop_scrape():
@@ -60,18 +57,29 @@ def stop_scrape():
             # Actualizar el archivo de estado
             with open('scraping_status.txt', 'w') as f:
                 f.write('finished')
-        return jsonify({"message": "Scraping detenido. Puede descargar el archivo.", "status": "finished"})
+        return jsonify({"message": "Scraping detenido. El archivo se descargará automáticamente.", "Status": "Finished"})
     return jsonify({"error": "No hay un proceso de scraping en ejecución"}), 404
 
 @app.route("/download")
 def download():
-    global process
-    if process and process.poll() is None:
-        return "El scraping aún está en proceso. Por favor, espere a que termine.", 403
-    elif os.path.exists("results.csv"):
+    if os.path.exists("results.csv"):
         return send_file("results.csv", as_attachment=True)
     else:
         return "No hay resultados disponibles para descargar", 404
+
+@app.route("/reset", methods=["GET"])
+def reset():
+    if os.path.exists('scraping_status.txt'):
+        os.remove('scraping_status.txt')
+    if os.path.exists('results.csv'):
+        os.remove('results.csv')
+    return redirect(url_for('index'))
+
+def get_status():
+    if os.path.exists('scraping_status.txt'):
+        with open('scraping_status.txt', 'r') as f:
+            return f.read()
+    return 'no_scraping'
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -1,70 +1,63 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
     <title>Scraping App</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        $(document).ready(function() {
-            $("#startButton").click(function() {
-                var url = $("#urlInput").val();
-                $.ajax({
-                    url: "/start",
-                    type: "POST",
-                    contentType: "application/json",
-                    data: JSON.stringify({url: url}),
-                    success: function(response) {
-                        $("#message").text(response.message);
-                        $("#status").text("scraping");
-                        checkStatus();
-                    },
-                    error: function(xhr) {
-                        $("#message").text("Error: " + xhr.responseJSON.error);
-                    }
-                });
+        function startScraping() {
+            let url = $('#url').val();
+            $.ajax({
+                url: '/start',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ url: url }),
+                success: function(data) {
+                    $('#message').text(data.message);
+                    $('#status').text("Status: scraping");
+                    checkStatus();
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error starting scraping:', error);
+                    $('#message').text('Error starting scraping: ' + error);
+                }
             });
+        }
 
-            $("#stopButton").click(function() {
-                $.ajax({
-                    url: "/stop",
-                    type: "GET",
-                    success: function(response) {
-                        $("#message").text(response.message);
-                        $("#status").text("finished");
-                        window.location.href = "/download";
-                    },
-                    error: function(xhr) {
-                        $("#message").text("Error: " + xhr.responseJSON.error);
-                    }
-                });
+        function stopScraping() {
+            $.get('/stop', function(data) {
+                $('#message').text(data.message);
+                $('#status').text("Status: finished");
+                window.location.href = '/download';
             });
+        }
 
-            function checkStatus() {
-                $.ajax({
-                    url: "/status",
-                    type: "GET",
-                    success: function(response) {
-                        $("#status").text(response.status);
-                        if (response.status === "scraping") {
-                            setTimeout(checkStatus, 5000); // Verificar cada 5 segundos
-                        } else if (response.status === "finished") {
-                            window.location.href = "/download";
-                        }
-                    }
-                });
-            }
+        function checkStatus() {
+            $.get('/status', function(data) {
+                $('#status').text("Status: " + data.status);
+                if (data.status === "scraping") {
+                    setTimeout(checkStatus, 5000);
+                } else if (data.status === "finished") {
+                    window.location.href = '/download';
+                }
+            });
+        }
 
-            checkStatus(); // Comenzar a verificar el estado cuando se carga la página
-        });
+        function reset() {
+            $.get('/reset', function() {
+                $('#message').text('');
+                $('#status').text("Status: no_scraping");
+                $('#url').val('');
+            });
+        }
     </script>
 </head>
 <body>
     <h1>Scraping App</h1>
-    <input type="text" id="urlInput" placeholder="Enter URL">
-    <button id="startButton">Start Scraping</button>
-    <button id="stopButton">Stop Scraping</button>
+    <input type="text" id="url" placeholder="Enter URL" value="https://www.idealista.com/en/venta-viviendas/campo-huesca/"/>
+    <button onclick="startScraping()">Start Scraping</button>
+    <button onclick="stopScraping()">Stop Scraping</button>
+    <button onclick="reset()">Reset</button>
     <p id="message"></p>
-    <p>Status: <span id="status">no_scraping</span></p>
-    <a id="downloadLink" href="/download" style="display: none;">Download CSV</a>
+    <p id="status">Status: {{ status }}</p>
 </body>
 </html>
