@@ -83,7 +83,7 @@ class MySpider(scrapy.Spider):
                     headers=self.headers,
                     callback=self.parse,
                     errback=self.start_requests_failure,
-                    # meta={'proxy': proxy_url},
+                    # meta={'proxy': proxy_url}, # Reducir Gastos Por rotacion de proxies
                     dont_filter=True
                 )
 
@@ -137,7 +137,7 @@ class MySpider(scrapy.Spider):
                 headers=self.headers,
                 callback=self.parse_listing,
                 errback=self.handle_failure,
-                # meta={'proxy': proxy_url},
+                # meta={'proxy': proxy_url}, # Reducir Gastos Por rotacion de proxies
                 dont_filter=True
             )        
         
@@ -148,7 +148,7 @@ class MySpider(scrapy.Spider):
             yield scrapy.Request(
                 next_page,  
                 headers=self.headers,
-                # meta={'proxy': proxy_url},
+                # meta={'proxy': proxy_url}, # Reducir Gastos Por rotacion de proxies
                 errback=self.handle_failure_PAGE,
                 callback=self.parse
             )

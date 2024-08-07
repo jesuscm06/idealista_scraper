@@ -1,12 +1,8 @@
-from flask import Flask, request, render_template, send_file, jsonify
+from flask import Flask, request, render_template, send_file, jsonify, redirect, url_for
 import subprocess
 import os
 import signal
 import time
-from dotenv import load_dotenv
-
-# Cargar las variables de entorno desde el archivo .env
-load_dotenv()
 
 app = Flask(__name__)
 process = None  # Variable global para manejar el proceso de scraping
