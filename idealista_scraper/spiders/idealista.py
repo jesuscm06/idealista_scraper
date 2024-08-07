@@ -1,9 +1,15 @@
 import scrapy
 import json
-import os
 import re
 from fake_useragent import UserAgent
 from scrapy.exporters import CsvItemExporter
+from dotenv import load_dotenv
+import os
+
+# Cargar las variables de entorno desde el archivo .env
+load_dotenv()
+proxy_url = os.getenv('PROXY_URL')
+
 class MySpider(scrapy.Spider):
     name = 'my_spider'
     rotate_user_agent = True
@@ -53,7 +59,7 @@ class MySpider(scrapy.Spider):
             headers=self.headers,
             callback=self.parse,
             errback=self.start_requests_failure,
-            meta={'proxy': 'http://brd-customer-hl_cd81b832-zone-zone1:gzrvo1m3481c@zproxy.lum-superproxy.io:22225'},
+            meta={'proxy': proxy_url},
             dont_filter=True
         )
 
@@ -75,7 +81,7 @@ class MySpider(scrapy.Spider):
             headers=self.headers,
             callback=self.parse_listing,
             errback=self.handle_failure,
-            meta={'proxy': 'http://brd-customer-hl_cd81b832-zone-zone1:xaztey3u2pi9@zproxy.lum-superproxy.io:22225'},
+            meta={'proxy': proxy_url},
             dont_filter=True
         )
    
@@ -85,7 +91,7 @@ class MySpider(scrapy.Spider):
             headers=self.headers,
             callback=self.parse,
             errback=self.handle_failure_PAGE,
-            meta={'proxy': 'http://brd-customer-hl_cd81b832-zone-zone1-country-es:gzrvo1m3481c@zproxy.lum-superproxy.io:22225'},
+            meta={'proxy': proxy_url},
             dont_filter=True
         )
 
@@ -112,8 +118,6 @@ class MySpider(scrapy.Spider):
                 card_urls.append(href)
         
         card_urls = [url for url in card_urls if url is not None and url != ""]
-        
-        proxy = 'http://brd-customer-hl_cd81b832-zone-zone1-country-es:xaztey3u2pi9@zproxy.lum-superproxy.io:22225'
 
         for card_url in card_urls:
             yield scrapy.Request(
@@ -121,7 +125,7 @@ class MySpider(scrapy.Spider):
                 headers=self.headers,
                 callback=self.parse_listing,
                 errback=self.handle_failure,
-                meta={'proxy': proxy},
+                meta={'proxy': proxy_url},
                 dont_filter=True
             )        
         
@@ -132,7 +136,7 @@ class MySpider(scrapy.Spider):
             yield scrapy.Request(
                 next_page,  
                 headers=self.headers,
-                meta={'proxy': 'http://brd-customer-hl_cd81b832-zone-zone1-country-es:xaztey3u2pi9@zproxy.lum-superproxy.io:22225'},
+                meta={'proxy': proxy_url},
                 errback=self.handle_failure_PAGE,
                 callback=self.parse
             )
