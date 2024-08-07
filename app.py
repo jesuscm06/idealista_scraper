@@ -2,6 +2,11 @@ from flask import Flask, request, render_template, send_file, jsonify
 import subprocess
 import os
 import signal
+import time
+from dotenv import load_dotenv
+
+# Cargar las variables de entorno desde el archivo .env
+load_dotenv()
 
 app = Flask(__name__)
 process = None  # Variable global para manejar el proceso de scraping
@@ -23,8 +28,7 @@ def start_scrape():
             command = [
                 'scrapy', 'crawl', 'my_spider',
                 '-a', f'start_urls={url}',
-                '-o', 'results.csv',
-                '-t', 'csv'
+                '-o', 'results.csv:csv'
             ]
             # Crear el archivo de estado
             with open('scraping_status.txt', 'w') as f:
@@ -39,7 +43,10 @@ def start_scrape():
 
 @app.route("/status", methods=["GET"])
 def status():
-    if os.path.exists('scraping_status.txt'):
+    global process
+    if process and process.poll() is None:
+        return jsonify({"status": "scraping"})
+    elif os.path.exists('scraping_status.txt'):
         with open('scraping_status.txt', 'r') as f:
             status = f.read()
         return jsonify({"status": status})
@@ -62,7 +69,10 @@ def stop_scrape():
 
 @app.route("/download")
 def download():
-    if os.path.exists("results.csv"):
+    global process
+    if process and process.poll() is None:
+        return "El scraping aún está en proceso. Por favor, espere a que termine.", 403
+    elif os.path.exists("results.csv"):
         return send_file("results.csv", as_attachment=True)
     else:
         return "No hay resultados disponibles para descargar", 404
