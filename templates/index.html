@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Scraping App</title>
+</head>
+<body>
+    <h1>Scraping App</h1>
+    <form id="scrapeForm">
+        <label for="url">URL:</label>
+        <input type="text" id="url" name="url">
+        <button type="submit">Start Scraping</button>
+    </form>
+    <br>
+    <form id="stopForm" action="/stop" method="get">
+        <button type="submit">Stop Scraping</button>
+    </form>
+    <form id="downloadForm" action="/download" method="get">
+        <button type="submit">Download CSV</button>
+    </form>
+    <br>
+    <p id="scraping_status">No hay scraping en progreso</p>
+
+    <script>
+        document.getElementById('scrapeForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            var url = document.getElementById('url').value;
+            fetch('/start', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ url: url })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'scraping') {
+                    document.getElementById('scraping_status').textContent = data.message;
+                } else {
+                    document.getElementById('scraping_status').textContent = data.error;
+                }
+            });
+        });
+
+        document.getElementById('stopForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            fetch('/stop')
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'finished') {
+                    document.getElementById('scraping_status').textContent = data.message;
+                } else {
+                    document.getElementById('scraping_status').textContent = data.error;
+                }
+            });
+        });
+
+        function checkStatus() {
+            fetch('/status')
+                .then(response => response.json())
+                .then(data => {
+                    let statusElement = document.getElementById('scraping_status');
+                    if (data.status === 'scraping') {
+                        statusElement.textContent = 'Scraping en progreso...';
+                    } else if (data.status === 'finished') {
+                        statusElement.textContent = 'Fin de scraping. Ya puede descargar archivos.';
+                    } else {
+                        statusElement.textContent = 'No hay scraping en progreso';
+                    }
+                });
+        }
+
+        setInterval(checkStatus, 5000);  // Verificar el estado cada 5 segundos
+        checkStatus();  // Verificar el estado inmediatamente cuando se carga la página
+    </script>
+</body>
+</html>
