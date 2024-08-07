@@ -1,2 +1,5 @@
-scrapy crawl my_spider -a start_urls="https://www.idealista.com/en/venta-viviendas/campo-huesca/" -o results.csv:csv
+#Correr en consola EC2
+scrapy crawl my_spider -a start_urls="https://www.idealista.com/en/venta-viviendas/huesca/ribagorza/" -o results.csv:csv 
+
+
 

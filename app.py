@@ -81,5 +81,12 @@ def get_status():
             return f.read()
     return 'no_scraping'
 
+def monitor_process(proc):
+    proc.wait()  # Esperar a que el proceso termine
+    with open('scraping_status.txt', 'w') as f:
+        f.write('finished')
+        
+    # Código para desencadenar la descarga automática del CSV
+
 if __name__ == "__main__":
     app.run(debug=True)
